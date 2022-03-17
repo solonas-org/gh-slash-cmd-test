@@ -1,9 +1,11 @@
-on: [push]
+on:
+  issue_comment:
+    types: [created]
 jobs:
   print:
     runs-on: ubuntu-latest
     steps:
-      - run: |
-          if [[ "${{ secrets.ACTIONS_BOT_TOKEN }}" == "test" ]]; then
-            echo y
-          fi
+      - name: test
+        if: |
+          github.event.client_payload.github.payload.issue.user.login == 'gousteris'
+        run: echo y
