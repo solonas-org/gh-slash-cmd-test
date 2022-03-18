@@ -6,8 +6,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: print
-        run: ${{ github.event.client_payload.github.payload.issue.user.login }}
+        run: echo ${{ toJson(github.event.comment.user.login) }}
       - name: test
         if: |
-          github.event.client_payload.github.payload.issue.user.login == 'gousteris'
+          github.event.comment.user.login == 'gousteris'
         run: echo y
