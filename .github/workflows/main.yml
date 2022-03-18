@@ -1,18 +1,17 @@
-# name: Slash Command Dispatch
-# on:
-#   issue_comment:
-#     types: [created]
-# jobs:
-#   slashCommandDispatch:
-#     runs-on: ubuntu-latest
-#     steps:
-#       - name: Slash Command Dispatch
-#         uses: peter-evans/slash-command-dispatch@v2
-#         with:
-#           token: ${{ secrets.ACTIONS_BOT_TOKEN }}
-#           repository: vtools
-#           commands: |
-#             hello-world
-#             backport
-#           static-args: |
-#             repo=gousteris/slash-cmd-test
+name: Slash Command Dispatch
+on:
+  issue_comment:
+    types: [created]
+jobs:
+  slashCommandDispatch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Slash Command Dispatch
+        uses: peter-evans/slash-command-dispatch@v2
+        with:
+          token: ${{ secrets.ACTIONS_BOT_TOKEN }}
+          repository: vtools
+          commands: |
+            backport
+          static-args: |
+            repo=solonas-org/gh-slash-cmd-test
