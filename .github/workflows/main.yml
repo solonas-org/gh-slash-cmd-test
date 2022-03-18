@@ -10,7 +10,6 @@ jobs:
         uses: peter-evans/slash-command-dispatch@v2
         with:
           token: ${{ secrets.ACTIONS_BOT_TOKEN }}
-          repository: vtools
           commands: |
             backport
           static-args: |
