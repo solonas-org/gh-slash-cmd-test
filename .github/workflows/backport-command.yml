@@ -47,22 +47,10 @@ jobs:
           fi
           echo ::set-output name=milestone::${next}
 
-      - name: output
-        run: echo ${{ steps.assignees.outputs.assignees }}
-
-      - name: output
-        run: echo ${{ steps.branch.outputs.branch }}
-
-      - name: output
-        run: echo ${{ toJson(github.event.client_payload.slash_command.args.named.repo) }}
-
-      - name: output
-        run: echo ${{ steps.milestone.outputs.milestone }}
-
       - name: Create issue
         run: |
           gh issue create --title "Backport ${{ toJson(github.event.client_payload.github.payload.issue.title) }} to ${{ steps.branch.outputs.branch }}" \
-            --repo "${{ toJson(github.event.client_payload.slash_command.args.named.org) }}/${{ toJson(github.event.client_payload.slash_command.args.named.repo) }}" \
+            --repo ${{ toJson(github.event.client_payload.slash_command.args.named.org) }}/${{ toJson(github.event.client_payload.slash_command.args.named.repo) }} \
             --assignee "${{ steps.assignees.outputs.assignees }}" \
             --milestone "${{ steps.milestone.outputs.milestone }}" \
             --body "issue: ${{ toJson(github.event.client_payload.github.payload.comment.issue_url) }}"
