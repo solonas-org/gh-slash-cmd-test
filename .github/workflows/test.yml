@@ -5,6 +5,8 @@ jobs:
   print:
     runs-on: ubuntu-latest
     steps:
+      - name: print
+        run: ${{ github.event.client_payload.github.payload.issue.user.login }}
       - name: test
         if: |
           github.event.client_payload.github.payload.issue.user.login == 'gousteris'
