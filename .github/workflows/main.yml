@@ -13,4 +13,5 @@ jobs:
           commands: |
             backport
           static-args: |
-            repo=solonas-org/gh-slash-cmd-test
+            org=solonas-org
+            repo=gh-slash-cmd-test
