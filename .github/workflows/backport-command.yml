@@ -37,13 +37,13 @@ jobs:
       - name: Discover and create milestone
         id: milestone
         run: |
-          if [[ ${{ toJson(github.event.client_payload.slash_command.args.named.repo) }} == 'auto' ]]; then
+          if [[ ${{ toJson(github.event.client_payload.slash_command.args.named.milestone) }} == 'auto' ]]; then
             major=$(echo "${{ toJson(github.event.client_payload.slash_command.args.unnamed.arg1) }}" | grep -Eo '^(v[0-9][0-9].[0-9][0-9])')
             latest_released=$(gh api repos/redpanda-data/redpanda/releases --jq '.[] | select(.draft==false).name'  | grep "${major}" | head -1)
             # latest_released=$(gh api repos/${{ toJson(github.event.client_payload.slash_command.args.named.org) }}/${{ toJson(github.event.client_payload.slash_command.args.named.repo) }}/releases --jq '.[] | select(.draft==false).name'  | grep "${major}" | head -1)
             assigne_milestone=$(echo ${latest_released} | awk -F. -v OFS=. '{$NF += 1 ; print}')
           else
-            assigne_milestone=${{ toJson(github.event.client_payload.slash_command.args.named.repo) }}
+            assigne_milestone=${{ toJson(github.event.client_payload.slash_command.args.named.milestone) }}
           fi
           if [[ $(gh api repos/solonas-org/gh-slash-cmd-test/milestones --jq .[].title | grep "${assigne_milestone}") == "" ]]; then
             gh api repos/solonas-org/gh-slash-cmd-test/milestones --silent --method POST -f title="${assigne_milestone}"
