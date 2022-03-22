@@ -42,7 +42,7 @@ jobs:
           # latest_released=$(gh api repos/${{ toJson(github.event.client_payload.slash_command.args.named.org) }}/${{ toJson(github.event.client_payload.slash_command.args.named.repo) }}/releases --jq '.[] | select(.draft==false).name'  | grep "${major}" | head -1)
           next=$(echo ${latest_released} | awk -F. -v OFS=. '{$NF += 1 ; print}')
           if [[ $(gh api repos/solonas-org/gh-slash-cmd-test/milestones --jq .[].title | grep "${next}") == "" ]]; then
-            gh api repos/solonas-org/gh-slash-cmd-test/milestones --method POST -f title="${next}"
+            gh api repos/solonas-org/gh-slash-cmd-test/milestones --silent --method POST -f title="${next}"
             sleep 20
           fi
           echo ::set-output name=milestone::${next}
