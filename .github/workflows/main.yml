@@ -16,3 +16,4 @@ jobs:
           static-args: |
             org=solonas-org
             repo=gh-slash-cmd-test
+            milestone=auto
