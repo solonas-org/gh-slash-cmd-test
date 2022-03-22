@@ -43,7 +43,7 @@ jobs:
           next=$(echo ${latest_released} | awk -F. -v OFS=. '{$NF += 1 ; print}')
           if [[ $(gh api repos/solonas-org/gh-slash-cmd-test/milestones --jq .[].title | grep "${next}") == "" ]]; then
             gh api repos/solonas-org/gh-slash-cmd-test/milestones --method POST -f title="${next}"
-            sleep 10
+            sleep 20
           fi
           echo ::set-output name=milestone::${next}
 
