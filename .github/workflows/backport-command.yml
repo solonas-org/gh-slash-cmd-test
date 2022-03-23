@@ -43,7 +43,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.ACTIONS_BOT_TOKEN }}
         run: |
-          backport_branch=${{ steps.branch.outputs.branch }
+          backport_branch=${{ steps.branch.outputs.branch }}
           gh issue create --title "[${backport_branch}] Backport ${{ toJson(github.event.client_payload.github.payload.issue.title) }} to [${backport_branch}](https://github.com/redpanda-data/redpanda/tree/${backport_branch})" \
             --repo ${{ toJson(github.event.client_payload.slash_command.args.named.org) }}/${{ toJson(github.event.client_payload.slash_command.args.named.repo) }} \
             --assignee "${{ steps.assignees.outputs.assignees }}" \
