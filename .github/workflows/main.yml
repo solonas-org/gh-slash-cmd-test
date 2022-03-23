@@ -11,6 +11,7 @@ jobs:
         with:
           token: ${{ secrets.ACTIONS_BOT_TOKEN }}
           permission: read
+          issue-type: issue
           commands: |
             backport
           static-args: |

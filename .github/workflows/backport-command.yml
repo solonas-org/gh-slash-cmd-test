@@ -6,22 +6,6 @@ jobs:
   backport:
     runs-on: ubuntu-latest
     steps:
-      - name: Install gh cli
-        run: |
-          curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
-          echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
-          sudo apt update
-          sudo apt install gh
-          gh auth login --with-token <<< "${{ secrets.ACTIONS_BOT_TOKEN }}"
-
-      - name: Add reaction
-        uses: peter-evans/create-or-update-comment@v1
-        with:
-          token: ${{ secrets.ACTIONS_BOT_TOKEN }}
-          repository: ${{ github.event.client_payload.github.payload.repository.full_name }}
-          comment-id: ${{ github.event.client_payload.github.payload.comment.id }}
-          reaction-type: hooray
-
       - name: Get assignees
         env:
           ASSIGNEES: ${{ toJson(github.event.client_payload.github.payload.issue.assignees) }}
@@ -35,6 +19,8 @@ jobs:
         run: echo ::set-output name=branch::"$BRANCH"
 
       - name: Discover and create milestone
+        env:
+          GITHUB_TOKEN: ${{ secrets.ACTIONS_BOT_TOKEN }}
         id: milestone
         run: |
           org=${{ toJson(github.event.client_payload.slash_command.args.named.org) }}
@@ -54,9 +40,20 @@ jobs:
           echo ::set-output name=milestone::${assigne_milestone}
 
       - name: Create issue
+        env:
+          GITHUB_TOKEN: ${{ secrets.ACTIONS_BOT_TOKEN }}
         run: |
-          gh issue create --title "Backport ${{ toJson(github.event.client_payload.github.payload.issue.title) }} to ${{ steps.branch.outputs.branch }}" \
+          backport_branch=${{ steps.branch.outputs.branch }
+          gh issue create --title "[${backport_branch}] Backport ${{ toJson(github.event.client_payload.github.payload.issue.title) }} to [${backport_branch}](https://github.com/redpanda-data/redpanda/tree/${backport_branch})" \
             --repo ${{ toJson(github.event.client_payload.slash_command.args.named.org) }}/${{ toJson(github.event.client_payload.slash_command.args.named.repo) }} \
             --assignee "${{ steps.assignees.outputs.assignees }}" \
             --milestone "${{ steps.milestone.outputs.milestone }}" \
             --body "issue: ${{ toJson(github.event.client_payload.github.payload.comment.issue_url) }}"
+
+      - name: Add reaction
+        uses: peter-evans/create-or-update-comment@v1
+        with:
+          token: ${{ secrets.ACTIONS_BOT_TOKEN }}
+          repository: ${{ github.event.client_payload.github.payload.repository.full_name }}
+          comment-id: ${{ github.event.client_payload.github.payload.comment.id }}
+          reaction-type: hooray
