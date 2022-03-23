@@ -21,7 +21,7 @@ jobs:
           BRANCH: ${{ toJson(github.event.client_payload.slash_command.args.unnamed.arg1) }}
         id: branch
         run: |
-          gh api "/repos/$TARGET_ORG/$TARGET_REPO/branches"
+          gh api "/repos/solonas-org/gh-slash-cmd-test/branches"
           branches=$(gh api "/repos/$TARGET_ORG/$TARGET_REPO/branches" --jq .[].name | grep "$BRANCH")
           if [[ $branches == "" ]]; then
             exit 2
