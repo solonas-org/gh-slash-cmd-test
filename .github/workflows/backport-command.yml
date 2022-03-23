@@ -22,9 +22,7 @@ jobs:
         id: branch
         run: |
           gh api "/repos/solonas-org/gh-slash-cmd-test/branches"
-          echo "$TARGET_ORG"
-          echo "$TARGET_REPO"
-          branches=$(gh api "/repos/$TARGET_ORG/$TARGET_REPO/branches" --jq .[].name | grep "$BRANCH")
+          branches=$(gh api "/repos/${TARGET_ORG@Q}/${TARGET_REPO@Q}/branches" --jq .[].name | grep "$BRANCH")
           if [[ $branches == "" ]]; then
             exit 2
           fi
