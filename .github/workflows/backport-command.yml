@@ -21,7 +21,7 @@ jobs:
           BRANCH: ${{ toJson(github.event.client_payload.slash_command.args.unnamed.arg1) }}
         id: branch
         run: |
-          if [[ $(gh api "/repos/$TARGET_ORG/$TARGET_REPO/branches" --jq .[].name | grep "$BRANCH") == "" ]]; then
+          if [[ $(gh api /repos/"$TARGET_ORG"/"$TARGET_REPO"/branches --jq .[].name | grep "$BRANCH") == "" ]]; then
             exit 2
           fi
           echo ::set-output name=branch::"$BRANCH"
