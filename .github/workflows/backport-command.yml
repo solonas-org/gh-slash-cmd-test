@@ -8,7 +8,6 @@ jobs:
     env:
       TARGET_ORG: ${{ github.event.client_payload.slash_command.args.named.org }}
       TARGET_REPO: ${{ github.event.client_payload.slash_command.args.named.repo }}
-      ORIG_COMMENT_ID: ${{ toJson(github.event.client_payload.github.payload.comment.id) }}
     steps:
       - name: Get assignees
         env:
@@ -67,8 +66,11 @@ jobs:
 
       - name: Add reaction
         uses: peter-evans/create-or-update-comment@v1
+        env:
+          ORIG_COMMENT_ID: ${{ toJson(github.event.client_payload.github.payload.comment.id) }}
+          REPO_FULL_NAME: ${{ github.event.client_payload.github.payload.repository.full_name }}
         with:
           token: ${{ secrets.ACTIONS_BOT_TOKEN }}
-          repository: "${TARGET_ORG}/${TARGET_REPO}"
+          repository: "${REPO_FULL_NAME}"
           comment-id: "${ORIG_COMMENT_ID}"
           reaction-type: hooray
