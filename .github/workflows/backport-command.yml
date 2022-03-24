@@ -11,7 +11,7 @@ jobs:
     steps:
       - name: Get assignees
         env:
-          ASSIGNEES: ${{ tJson(github.event.client_payload.github.payload.issue.assignees) }}
+          ASSIGNEES: ${{ toJson(github.event.client_payload.github.payload.issue.assignees) }}
         id: assignees
         run: echo ::set-output name=assignees::$(echo "$ASSIGNEES" | jq -r '.[].login' | paste -s -d ',' -)
 
