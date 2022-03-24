@@ -6,8 +6,10 @@ jobs:
   backport:
     runs-on: ubuntu-latest
     env:
-      TARGET_ORG: "${{ toJson(github.event.client_payload.slash_command.args.named.org) }}"
-      TARGET_REPO: "${{ toJson(github.event.client_payload.slash_command.args.named.repo) }}"
+      TARGET_ORG: |
+        ${{ toJson(github.event.client_payload.slash_command.args.named.org) }}
+      TARGET_REPO: |
+        ${{ toJson(github.event.client_payload.slash_command.args.named.repo) }}
     steps:
       - name: Get assignees
         env:
