@@ -23,10 +23,7 @@ jobs:
         run: |
           TARGET_ORG=$(echo "$TARGET_ORG" | tr -d '"')
           TARGET_REPO=$(echo "$TARGET_REPO" | tr -d '"')
-          set -x
-          echo $TARGET_ORG
-          echo $TARGET_REPO
-          gh api "/repos/solonas-org/gh-slash-cmd-test/branches"
+          BRANCH=$(echo "$BRANCH" | tr -d '"')
           branches=$(gh api "/repos/${TARGET_ORG}/${TARGET_REPO}/branches" --jq .[].name | grep "$BRANCH")
           if [[ $branches == "" ]]; then
             exit 2
