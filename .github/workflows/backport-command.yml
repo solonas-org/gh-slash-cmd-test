@@ -6,10 +6,8 @@ jobs:
   backport:
     runs-on: ubuntu-latest
     env:
-      TARGET_ORG: |
-        ${{ toJson(github.event.client_payload.slash_command.args.named.org) }}
-      TARGET_REPO: |
-        ${{ toJson(github.event.client_payload.slash_command.args.named.repo) }}
+      TARGET_ORG: '${{ toJson(github.event.client_payload.slash_command.args.named.org) }}'
+      TARGET_REPO: '${{ toJson(github.event.client_payload.slash_command.args.named.repo) }}'
     steps:
       - name: Get assignees
         env:
@@ -23,7 +21,8 @@ jobs:
           BRANCH: ${{ toJson(github.event.client_payload.slash_command.args.unnamed.arg1) }}
         id: branch
         run: |
-          export TARGET_ORG TARGET_REPO BRANCH
+          echo $TARGET_ORG
+          echo $TARGET_REPO
           gh api "/repos/solonas-org/gh-slash-cmd-test/branches"
           branches=$(gh api "/repos/${TARGET_ORG}/${TARGET_REPO}/branches" --jq .[].name | grep "$BRANCH")
           if [[ $branches == "" ]]; then
