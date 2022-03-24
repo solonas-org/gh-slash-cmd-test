@@ -21,6 +21,7 @@ jobs:
           BRANCH: ${{ toJson(github.event.client_payload.slash_command.args.unnamed.arg1) }}
         id: branch
         run: |
+          set -x
           # TARGET_ORG=$(echo "$TARGET_ORG" | tr -d '"')
           # TARGET_REPO=$(echo "$TARGET_REPO" | tr -d '"')
           # BRANCH=$(echo "$BRANCH" | tr -d '"')
