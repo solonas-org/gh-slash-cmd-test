@@ -67,7 +67,7 @@ jobs:
       - name: Add reaction
         uses: peter-evans/create-or-update-comment@v1
         env:
-          ORIG_COMMENT_ID: ${{ toJson(github.event.client_payload.github.payload.comment.id) }}
+          ORIG_COMMENT_ID: ${{ github.event.client_payload.github.payload.comment.id }}
           REPO_FULL_NAME: ${{ github.event.client_payload.github.payload.repository.full_name }}
         with:
           token: ${{ secrets.ACTIONS_BOT_TOKEN }}
