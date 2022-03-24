@@ -71,6 +71,6 @@ jobs:
           REPO_FULL_NAME: ${{ github.event.client_payload.github.payload.repository.full_name }}
         with:
           token: ${{ secrets.ACTIONS_BOT_TOKEN }}
-          repository: "${REPO_FULL_NAME}"
-          comment-id: "${ORIG_COMMENT_ID}"
+          repository: ${REPO_FULL_NAME}
+          comment-id: ${ORIG_COMMENT_ID}
           reaction-type: hooray
