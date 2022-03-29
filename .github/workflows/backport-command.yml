@@ -118,9 +118,11 @@ jobs:
       - name: Discover branch
         env:
           GITHUB_TOKEN: ${{ secrets.ACTIONS_BOT_TOKEN }}
+          ISSUE_TITLE: ${{ github.event.client_payload.github.payload.issue.title }}
         id: branch
         run: |
-          backport_branch=$(echo $test_str | grep -Eo '^(\[.*\])' | tr -d '[]')
+          set -x
+          backport_branch=$(echo $ISSUE_TITLE | grep -Eo '^(\[.*\])' | tr -d '[]')
           branches=$(gh api "/repos/${TARGET_ORG}/${TARGET_REPO}/branches" --jq .[].name | grep "$backport_branch")
           if [[ $branches == "" ]]; then
             exit 2
