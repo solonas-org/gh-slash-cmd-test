@@ -18,7 +18,7 @@ jobs:
         id: type
         run: |
           set -x
-          branches=$(gh api "/repos/${TARGET_ORG}/${TARGET_REPO}/branches" --jq '.[] | select(.name=='$ARG1')')
+          branches=$(gh api "/repos/${TARGET_ORG}/${TARGET_REPO}/branches" --jq '.[] | select(.name=='\"$ARG1\"')')
           if [[ $branches == "" ]]; then
             # not a branch; checking if its a PR
             pulls=$(gh api "repos/${TARGET_ORG}/${TARGET_REPO}/pulls/$ARG1" --jq '. | select(.state=="closed")')
