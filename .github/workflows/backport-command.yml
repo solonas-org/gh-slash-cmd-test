@@ -142,12 +142,31 @@ jobs:
           fi
           echo ::set-output name=milestone::$milestone
 
+      - name: Get commits of PR
+        env: 
+          BACKPORT_PR_NUMBER: ${{ github.event.client_payload.slash_command.args.unnamed.arg1 }}
+          GITHUB_TOKEN: ${{ secrets.ACTIONS_BOT_TOKEN }}
+        id: backport_commits
+        run: |
+          backport_commits=$(gh api "repos/$TARGET_ORG/$TARGET_REPO/pulls/$BACKPORT_PR_NUMBER/commits" --jq .[].sha | paste -s -d ' ' -)
+          echo ::set-output name=backport_commits::$backport_commits
+
       - name: Debug
         run: |
           set -x
           echo ${{ steps.assignees.outputs.assignees }}
           echo ${{ steps.branch.outputs.branch }}
           echo ${{ steps.milestone.outputs.milestone }}
+          echo ${{ steps.backport_commits.outputs.backport_commits }}
+          echo ${{ github.event.client_payload.github.actor }}
+
+      # - name: Checkout repo
+      #   uses: actions/checkout@v3
+      #   with:
+      #     repository: ${{ github.event.client_payload.github.payload.repository.full_name }}
+      #   run: |
+      #     set -x
+      #     git checkout -b 
 
       # - name: Create issue
       #   env:
