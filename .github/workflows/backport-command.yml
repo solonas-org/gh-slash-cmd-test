@@ -3,7 +3,34 @@ on:
   repository_dispatch:
     types: [backport-command]
 jobs:
-  backport:
+  backport-type:
+    outputs:
+      type: ${{ steps.type.outputs.type }}
+    runs-on: ubuntu-latest
+    env:
+      TARGET_ORG: ${{ github.event.client_payload.slash_command.args.named.org }}
+      TARGET_REPO: ${{ github.event.client_payload.slash_command.args.named.repo }}
+    steps:
+      - name: Get type of backport (issue or PR)
+        env:
+          GITHUB_TOKEN: ${{ secrets.ACTIONS_BOT_TOKEN }}
+          BRANCH: ${{ github.event.client_payload.slash_command.args.unnamed.arg1 }}
+        id: type
+        run: |
+          branches=$(gh api "/repos/${TARGET_ORG}/${TARGET_REPO}/branches" --jq .[].name | grep "$BRANCH")
+          if [[ $branches == "" ]]; then
+            # not a branch; checking if its a PR
+            pulls=$(gh api repos/${TARGET_ORG}/${TARGET_REPO}/pulls/3893 --jq '. | select(.state=="closed")')
+            if [[ $pulls == "" ]]; then
+              echo "The provided argument is neither branch nor a pr"
+              exit 2
+            else
+              echo "::set-output name=type::pr"
+          else
+            echo "::set-output name=type::branch"
+          fi
+  backport-issue:
+    if: needs.backport-type.outputs.type == 'branch'
     runs-on: ubuntu-latest
     env:
       TARGET_ORG: ${{ github.event.client_payload.slash_command.args.named.org }}
