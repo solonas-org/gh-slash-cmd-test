@@ -31,12 +31,13 @@ jobs:
             echo "::set-output name=type::branch"
           fi
   backport-issue:
-    if: needs.backport-type.outputs.type == 'branch'
+    # if: needs.backport-type.outputs.type == 'branch'
     runs-on: ubuntu-latest
     env:
       TARGET_ORG: ${{ github.event.client_payload.slash_command.args.named.org }}
       TARGET_REPO: ${{ github.event.client_payload.slash_command.args.named.repo }}
     steps:
+      - run: echo ${{ needs.backport-type.outputs.type }}
       - name: Get assignees
         env:
           ASSIGNEES: ${{ toJson(github.event.client_payload.github.payload.issue.assignees) }}
