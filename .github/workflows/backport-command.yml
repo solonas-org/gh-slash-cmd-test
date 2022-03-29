@@ -32,7 +32,7 @@ jobs:
           fi
   backport-issue:
     needs: backport-type
-    # if: needs.backport-type.outputs.type == 'branch'
+    if: needs.backport-type.outputs.type == 'branch'
     runs-on: ubuntu-latest
     env:
       TARGET_ORG: ${{ github.event.client_payload.slash_command.args.named.org }}
@@ -40,7 +40,7 @@ jobs:
     steps:
       - run: |
           echo ${{ needs.backport-type.outputs.type }}
-          exit 0
+          exit 2
       - name: Get assignees
         env:
           ASSIGNEES: ${{ toJson(github.event.client_payload.github.payload.issue.assignees) }}
