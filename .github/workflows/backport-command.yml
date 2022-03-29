@@ -26,6 +26,7 @@ jobs:
               exit 2
             else
               echo "::set-output name=type::pr"
+            fi
           else
             echo "::set-output name=type::branch"
           fi
