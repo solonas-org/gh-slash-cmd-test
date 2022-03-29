@@ -14,13 +14,14 @@ jobs:
       - name: Get type of backport (issue or PR)
         env:
           GITHUB_TOKEN: ${{ secrets.ACTIONS_BOT_TOKEN }}
-          BRANCH: ${{ github.event.client_payload.slash_command.args.unnamed.arg1 }}
+          ARG1: ${{ github.event.client_payload.slash_command.args.unnamed.arg1 }}
         id: type
         run: |
-          branches=$(gh api "/repos/${TARGET_ORG}/${TARGET_REPO}/branches" --jq .[].name | grep "$BRANCH")
+          set -x
+          branches=$(gh api "/repos/${TARGET_ORG}/${TARGET_REPO}/branches" --jq .[].name | grep "$ARG1")
           if [[ $branches == "" ]]; then
             # not a branch; checking if its a PR
-            pulls=$(gh api repos/${TARGET_ORG}/${TARGET_REPO}/pulls/3893 --jq '. | select(.state=="closed")')
+            pulls=$(gh api "repos/${TARGET_ORG}/${TARGET_REPO}/pulls/$ARG1" --jq '. | select(.state=="closed")')
             if [[ $pulls == "" ]]; then
               echo "The provided argument is neither branch nor a pr"
               exit 2
