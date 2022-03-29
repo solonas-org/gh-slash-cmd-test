@@ -38,9 +38,6 @@ jobs:
       TARGET_ORG: ${{ github.event.client_payload.slash_command.args.named.org }}
       TARGET_REPO: ${{ github.event.client_payload.slash_command.args.named.repo }}
     steps:
-      - run: |
-          echo ${{ needs.backport-type.outputs.type }}
-          exit 2
       - name: Get assignees
         env:
           ASSIGNEES: ${{ toJson(github.event.client_payload.github.payload.issue.assignees) }}
