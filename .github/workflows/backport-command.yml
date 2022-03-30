@@ -33,8 +33,10 @@ jobs:
           fi
 
       - name: debug
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
         run: |
-          echo ${{ github.event.client_payload.github.eventName }}
+          echo $GITHUB_CONTEXT
   backport-issue:
     needs: backport-type
     if: needs.backport-type.outputs.type == 'branch'
