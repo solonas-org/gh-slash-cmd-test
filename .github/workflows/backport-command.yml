@@ -170,7 +170,9 @@ jobs:
             --repo "${TARGET_ORG}/${TARGET_REPO}" \
             --assignee "${ORIG_ASSIGNEES}" \
             --milestone "${TARGET_MILESTONE}" \
-            --body "pull request: ${ORIG_ISSUE_URL}\n\nfixes $issue_number"
+            --body """pull request: ${ORIG_ISSUE_URL}
+            fixes $issue_number
+            """
 
       - name: Add reaction
         uses: peter-evans/create-or-update-comment@v1
