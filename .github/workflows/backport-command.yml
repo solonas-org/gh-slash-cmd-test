@@ -253,10 +253,6 @@ jobs:
           BACKPORT_COMMITS: ${{ steps.backport_commits.outputs.backport_commits }}
           ORIG_ISSUE_URL: ${{ github.event.client_payload.github.payload.issue.html_url }}
         run: |
-          if [[ "$IS_MERGED" != true ]]; then
-            echo "The pull request is not merged yet. Cancelling..."
-            exit 1
-          fi
           # ensure unique branch
           suffix=$(echo $(($RANDOM % 1000)))
           git fetch
