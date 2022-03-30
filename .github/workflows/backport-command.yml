@@ -259,7 +259,7 @@ jobs:
           git remote -vv
           git config --global user.email "solon_gousteris@outlook.com.gr"
           git config --global user.name "siretsuog"
-          branch_name=$(echo "backport-$ORIG_TITLE-to-$BACKPORT_BRANCH-$suffix" | sed 's/ /-/g')
+          branch_name=$(echo "backport-$ORIG_TITLE-to-$BACKPORT_BRANCH-$suffix" | sed 's/ /-/g' | tr -d '[]')
           git checkout -b $branch_name remotes/origin/$BACKPORT_BRANCH
           git cherry-pick -x $BACKPORT_COMMITS
           git push --set-upstream origin $branch_name
