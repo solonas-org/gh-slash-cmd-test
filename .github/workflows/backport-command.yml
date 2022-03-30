@@ -15,9 +15,16 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.ACTIONS_BOT_TOKEN }}
           ARG1: ${{ github.event.client_payload.slash_command.args.unnamed.arg1 }}
+          ISSUE_PAYLOAD: ${{ toJson(github.event.client_payload.github.payload.issue) }}
         id: type
         run: |
           set -x
+          if [[ $(echo $ISSUE_PAYLOAD | jq 'has("pull_request")') == true ]]; then
+            commented_on=pr
+          else
+            commented_on=issue
+          fi
+          echo "::set-output name=commented_on::$commented_on"
           branches=$(gh api "/repos/${TARGET_ORG}/${TARGET_REPO}/branches" --jq '.[] | select(.name=='\"$ARG1\"')')
           if [[ $branches == "" ]]; then
             # not a branch; checking if its a PR
@@ -26,18 +33,22 @@ jobs:
               echo "The provided argument is neither branch nor a pr"
               exit 2
             else
-              echo "::set-output name=type::pr"
+              # case valid PR number
+              if [[ "$commented_on" == "pr" ]]; then
+                echo "Provided PR number in PR comment. You should use PR numbers only on issue somments"
+                exit 2
+              else
+                echo "::set-output name=type::pr"
+              fi
             fi
           else
+            # case valid branch name
+            # this case applies for both creating issue and PRs
+            # thus it is accepted in any case
             echo "::set-output name=type::branch"
           fi
 
-      - name: debug
-        env:
-          GITHUB_CONTEXT: ${{ toJson(github) }}
-        run: |
-          echo $GITHUB_CONTEXT
-  backport-issue:
+  create-backport-issue:
     needs: backport-type
     if: needs.backport-type.outputs.type == 'branch'
     runs-on: ubuntu-latest
@@ -107,7 +118,7 @@ jobs:
           repository: ${{ github.event.client_payload.github.payload.repository.full_name }}
           comment-id: ${{ github.event.client_payload.github.payload.comment.id }}
           reaction-type: hooray
-  backport-pr:
+  create-backport-pr:
     needs: backport-type
     if: needs.backport-type.outputs.type == 'pr'
     runs-on: ubuntu-latest
