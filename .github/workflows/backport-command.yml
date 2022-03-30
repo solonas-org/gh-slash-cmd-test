@@ -239,12 +239,10 @@ jobs:
           echo ::set-output name=backport_commits::$backport_commits
 
       - uses: actions/checkout@v3
-        if: needs.backport-type.outputs.commented_on == 'pr'
         with:
           repository: ${{ github.event.client_payload.github.payload.repository.full_name }}
 
       - name: Create pull request
-        if: needs.backport-type.outputs.commented_on == 'pr'
         env:
           GITHUB_TOKEN: ${{ secrets.ACTIONS_BOT_TOKEN }}
           TARGET_MILESTONE: ${{ steps.milestone.outputs.milestone }}
