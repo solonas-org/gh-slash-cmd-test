@@ -130,11 +130,13 @@ jobs:
           backport_commits=$(gh api "repos/$TARGET_ORG/$TARGET_REPO/pulls/$BACKPORT_PR_NUMBER/commits" --jq .[].sha | paste -s -d ' ' -)
           echo ::set-output name=backport_commits::$backport_commits
 
-      - name: Create pull request
+      - uses: actions/checkout@v3
         if: needs.backport-type.outputs.commented_on == 'pr'
-        uses: actions/checkout@v3
         with:
           repository: ${{ github.event.client_payload.github.payload.repository.full_name }}
+
+      - name: Create pull request
+        if: needs.backport-type.outputs.commented_on == 'pr'
         env:
           GITHUB_TOKEN: ${{ secrets.ACTIONS_BOT_TOKEN }}
           TARGET_MILESTONE: ${{ steps.milestone.outputs.milestone }}
