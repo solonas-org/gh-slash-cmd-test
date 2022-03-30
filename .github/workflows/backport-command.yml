@@ -151,7 +151,7 @@ jobs:
             echo "The pull request is not merged yet. Cancelling..."
             exit 1
           fi
-          branch_name=$(echo "[${BACKPORT_BRANCH}] ${ORIG_TITLE}" | sed 's/ /-/g')
+          branch_name=$(echo "backport-$ORIG_TITLE-to-$BACKPORT_BRANCH" | sed 's/ /-/g')
           issue_number=$(gh issue list --repo "${TARGET_ORG}/${TARGET_REPO}" \
             --state open \
             --search "[${BACKPORT_BRANCH}] ${ORIG_TITLE} in:title" \
