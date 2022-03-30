@@ -185,7 +185,7 @@ jobs:
           comment-id: ${{ github.event.client_payload.github.payload.comment.id }}
           reaction-type: hooray
 
-  # works ONLY on issue comments. creates the backport PR
+  # works ONLY on backport issue comments. creates the backport PR
   # eg /backport 123
   type-pr:
     needs: backport-type
