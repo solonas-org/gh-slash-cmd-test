@@ -31,6 +31,10 @@ jobs:
           else
             echo "::set-output name=type::branch"
           fi
+
+      - name: debug
+        run: |
+          echo ${{ github.event.client_payload.github.eventName }}
   backport-issue:
     needs: backport-type
     if: needs.backport-type.outputs.type == 'branch'
