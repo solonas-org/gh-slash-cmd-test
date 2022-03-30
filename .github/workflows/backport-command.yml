@@ -3,6 +3,8 @@ on:
   repository_dispatch:
     types: [backport-command]
 jobs:
+  # outputs the backport type (create PR or issue)
+  # outputs the source of the comment (PR or issue)
   backport-type:
     outputs:
       type: ${{ steps.type.outputs.type }}
@@ -19,7 +21,6 @@ jobs:
           CLIENT_PAYLOAD: ${{ toJson(github.event.client_payload) }}
         id: type
         run: |
-          set -x
           if [[ $(echo $CLIENT_PAYLOAD | jq 'has("pull_request")') == true ]]; then
             commented_on=pr
           else
@@ -48,15 +49,12 @@ jobs:
             # thus it is accepted in any case
             echo "::set-output name=type::branch"
           fi
-      - name: Debug
-        env:
-          GITHUB_CONTEXT: ${{ toJson(github) }}
-        run: |
-          echo $GITHUB_CONTEXT
+
   # creates backport issue if commented on issue, or
   # creates backport PR if commented on PR
+  # eg /backport v21.11.x
   # TODO: add functionality to create PRs when commenting on issues
-  create-backport:
+  type-branch:
     needs: backport-type
     if: needs.backport-type.outputs.type == 'branch'
     runs-on: ubuntu-latest
@@ -155,6 +153,8 @@ jobs:
           suffix=$(echo $(($RANDOM % 1000)))
           git fetch
           git remote -vv
+          # git config --global user.email "vbot@vectorized.io"
+          # git config --global user.name "vbotbuildovich"
           git config --global user.email "solon_gousteris@outlook.com.gr"
           git config --global user.name "siretsuog"
           branch_name=$(echo "backport-$ORIG_TITLE-to-$BACKPORT_BRANCH-$suffix" | sed 's/ /-/g')
@@ -173,7 +173,7 @@ jobs:
             --repo "${TARGET_ORG}/${TARGET_REPO}" \
             --assignee "${ORIG_ASSIGNEES}" \
             --milestone "${TARGET_MILESTONE}" \
-            --body """pull request: ${ORIG_COMMENT_URL}
+            --body """Backport from pull request: ${ORIG_COMMENT_URL}
             Fixes $issue_number
             """
 
@@ -185,10 +185,9 @@ jobs:
           comment-id: ${{ github.event.client_payload.github.payload.comment.id }}
           reaction-type: hooray
 
-  # creates the PR ONLY when commented on a backport issue
-  # and links the corresponding issue
+  # works ONLY on issue comments. creates the backport PR
   # eg /backport 123
-  create-backport-pr:
+  type-pr:
     needs: backport-type
     if: needs.backport-type.outputs.type == 'pr'
     runs-on: ubuntu-latest
@@ -208,7 +207,6 @@ jobs:
           ISSUE_TITLE: ${{ github.event.client_payload.github.payload.issue.title }}
         id: branch
         run: |
-          set -x
           backport_branch=$(echo $ISSUE_TITLE | grep -Eo '^(\[.*\])' | tr -d '[]')
           branches=$(gh api "/repos/${TARGET_ORG}/${TARGET_REPO}/branches" --jq .[].name | grep "$backport_branch")
           if [[ $branches == "" ]]; then
@@ -258,6 +256,8 @@ jobs:
           suffix=$(echo $(($RANDOM % 1000)))
           git fetch
           git remote -vv
+          # git config --global user.email "vbot@vectorized.io"
+          # git config --global user.name "vbotbuildovich"
           git config --global user.email "solon_gousteris@outlook.com.gr"
           git config --global user.name "siretsuog"
           branch_name=$(echo "backport-$ORIG_TITLE-to-$BACKPORT_BRANCH-$suffix" | sed 's/ /-/g' | tr -d '[]')
@@ -270,7 +270,7 @@ jobs:
             --repo "${TARGET_ORG}/${TARGET_REPO}" \
             --assignee "${ORIG_ASSIGNEES}" \
             --milestone "${TARGET_MILESTONE}" \
-            --body """pull request: ${ORIG_COMMENT_URL}
+            --body """Backport from pull request: ${ORIG_COMMENT_URL}
             Fixes $ORIG_ISSUE_URL
             """
 
@@ -281,12 +281,3 @@ jobs:
           repository: ${{ github.event.client_payload.github.payload.repository.full_name }}
           comment-id: ${{ github.event.client_payload.github.payload.comment.id }}
           reaction-type: hooray
-
-      - name: Debug
-        run: |
-          set -x
-          echo ${{ steps.assignees.outputs.assignees }}
-          echo ${{ steps.branch.outputs.branch }}
-          echo ${{ steps.milestone.outputs.milestone }}
-          echo ${{ steps.backport_commits.outputs.backport_commits }}
-          echo ${{ github.event.client_payload.github.eventName }}
