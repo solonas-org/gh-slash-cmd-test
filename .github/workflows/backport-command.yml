@@ -49,7 +49,7 @@ jobs:
             echo "::set-output name=type::branch"
           fi
   # creates backport issue if commented on issue, or
-  # creates backport issue AND PR if commetned on PR
+  # creates backport PR if commented on PR
   # TODO: add functionality to create PRs when commenting on issues
   create-backport:
     needs: backport-type
@@ -100,6 +100,7 @@ jobs:
           echo ::set-output name=milestone::${assigne_milestone}
 
       - name: Create issue
+        if: needs.backport-type.outputs.commented_on == 'issue'
         env:
           GITHUB_TOKEN: ${{ secrets.ACTIONS_BOT_TOKEN }}
           TARGET_MILESTONE: ${{ steps.milestone.outputs.milestone }}
@@ -108,19 +109,11 @@ jobs:
           ORIG_ASSIGNEES: ${{ steps.assignees.outputs.assignees }}
           ORIG_ISSUE_URL: ${{ github.event.client_payload.github.payload.comment.html_url }}
         run: |
-          search_issues_len=$(gh issue list --repo "${TARGET_ORG}/${TARGET_REPO}" \
-            --state open \
-            --search "[${BACKPORT_BRANCH}] ${ORIG_TITLE} in:title" \
-            --json number \
-            --jq 'length')
-          if [[ "$search_issues_len" == "0" ]]; then
-            echo "Issue does not exist. Creating..."
-            gh issue create --title "[${BACKPORT_BRANCH}] ${ORIG_TITLE}" \
-              --repo "${TARGET_ORG}/${TARGET_REPO}" \
-              --assignee "${ORIG_ASSIGNEES}" \
-              --milestone "${TARGET_MILESTONE}" \
-              --body "Backport ${ORIG_ISSUE_URL} to branch ${BACKPORT_BRANCH}"
-          fi
+          gh issue create --title "[${BACKPORT_BRANCH}] ${ORIG_TITLE}" \
+            --repo "${TARGET_ORG}/${TARGET_REPO}" \
+            --assignee "${ORIG_ASSIGNEES}" \
+            --milestone "${TARGET_MILESTONE}" \
+            --body "Backport ${ORIG_ISSUE_URL} to branch ${BACKPORT_BRANCH}"
 
       - name: Create pull request
         if: needs.backport-type.outputs.commented_on == 'pr'
@@ -150,7 +143,7 @@ jobs:
             --repo "${TARGET_ORG}/${TARGET_REPO}" \
             --assignee "${ORIG_ASSIGNEES}" \
             --milestone "${TARGET_MILESTONE}" \
-            --body "issue: ${ORIG_ISSUE_URL}"
+            --body "pull request: ${ORIG_ISSUE_URL}"
 
       - name: Add reaction
         uses: peter-evans/create-or-update-comment@v1
