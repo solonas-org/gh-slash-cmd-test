@@ -158,15 +158,16 @@ jobs:
           echo ${{ steps.branch.outputs.branch }}
           echo ${{ steps.milestone.outputs.milestone }}
           echo ${{ steps.backport_commits.outputs.backport_commits }}
-          echo ${{ github.event.client_payload.github.actor }}
+          echo ${{ github.event.client_payload.github.eventName }}
 
-      # - name: Checkout repo
-      #   uses: actions/checkout@v3
-      #   with:
-      #     repository: ${{ github.event.client_payload.github.payload.repository.full_name }}
-      #   run: |
-      #     set -x
-      #     git checkout -b 
+      - name: Checkout repo
+        uses: actions/checkout@v3
+        with:
+          repository: siretsuog/${{ github.event.client_payload.github.payload.repository.name }}
+        run: |
+          set -x
+          git remote add upstream "https://github.com/$TARGET_ORG/$TARGET_REPO.git"
+          # git checkout -b backport-
 
       # - name: Create issue
       #   env:
