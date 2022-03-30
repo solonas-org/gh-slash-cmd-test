@@ -154,6 +154,8 @@ jobs:
           fi
           git fetch
           git remote -vv
+          git config --global user.email "solon_gousteris@outlook.com.gr"
+          git config --global user.name "siretsuog"
           branch_name=$(echo "backport-$ORIG_TITLE-to-$BACKPORT_BRANCH" | sed 's/ /-/g')
           issue_number=$(gh issue list --repo "${TARGET_ORG}/${TARGET_REPO}" \
             --state open \
