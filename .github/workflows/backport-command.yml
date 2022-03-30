@@ -112,13 +112,13 @@ jobs:
           BACKPORT_BRANCH: ${{ steps.branch.outputs.branch }}
           ORIG_TITLE: ${{ github.event.client_payload.github.payload.issue.title }}
           ORIG_ASSIGNEES: ${{ steps.assignees.outputs.assignees }}
-          ORIG_ISSUE_URL: ${{ github.event.client_payload.github.payload.comment.html_url }}
+          ORIG_COMMENT_URL: ${{ github.event.client_payload.github.payload.comment.html_url }}
         run: |
           gh issue create --title "[${BACKPORT_BRANCH}] ${ORIG_TITLE}" \
             --repo "${TARGET_ORG}/${TARGET_REPO}" \
             --assignee "${ORIG_ASSIGNEES}" \
             --milestone "${TARGET_MILESTONE}" \
-            --body "Backport ${ORIG_ISSUE_URL} to branch ${BACKPORT_BRANCH}"
+            --body "Backport ${ORIG_COMMENT_URL} to branch ${BACKPORT_BRANCH}"
 
       - name: Get commits of PR
         if: needs.backport-type.outputs.commented_on == 'pr'
@@ -143,11 +143,10 @@ jobs:
           BACKPORT_BRANCH: ${{ steps.branch.outputs.branch }}
           ORIG_TITLE: ${{ github.event.client_payload.github.payload.issue.title }}
           ORIG_ASSIGNEES: ${{ steps.assignees.outputs.assignees }}
-          ORIG_ISSUE_URL: ${{ github.event.client_payload.github.payload.comment.html_url }}
+          ORIG_COMMENT_URL: ${{ github.event.client_payload.github.payload.comment.html_url }}
           IS_MERGED: ${{ github.event.client_payload.pull_request.merged }}
           BACKPORT_COMMITS: ${{ steps.backport_commits.outputs.backport_commits }}
         run: |
-          set -x
           if [[ "$IS_MERGED" != true ]]; then
             echo "The pull request is not merged yet. Cancelling..."
             exit 1
@@ -163,16 +162,17 @@ jobs:
             --state open \
             --search "[${BACKPORT_BRANCH}] ${ORIG_TITLE} in:title" \
             --json number \
+            --milestone "${TARGET_MILESTONE}" \
             --jq '.[0].number')
           git checkout -b $branch_name remotes/origin/$BACKPORT_BRANCH
           git cherry-pick -x $BACKPORT_COMMITS
-          git push --set-upstream origin $branch_name -f
+          git push --set-upstream origin $branch_name
           gh pr create --title "[${BACKPORT_BRANCH}] ${ORIG_TITLE}" \
             --base "${BACKPORT_BRANCH}" \
             --repo "${TARGET_ORG}/${TARGET_REPO}" \
             --assignee "${ORIG_ASSIGNEES}" \
             --milestone "${TARGET_MILESTONE}" \
-            --body """pull request: ${ORIG_ISSUE_URL}
+            --body """pull request: ${ORIG_COMMENT_URL}
             fixes $issue_number
             """
 
@@ -184,6 +184,9 @@ jobs:
           comment-id: ${{ github.event.client_payload.github.payload.comment.id }}
           reaction-type: hooray
 
+  # creates the PR ONLY when commented on a backport issue
+  # and links the corresponding issue
+  # eg /backport 123
   create-backport-pr:
     needs: backport-type
     if: needs.backport-type.outputs.type == 'pr'
@@ -221,6 +224,7 @@ jobs:
         run: |
           milestone=$(gh api "/repos/${TARGET_ORG}/${TARGET_REPO}/issues/$ISSUE_NUMBER" --jq .milestone.title)
           if [[ $milestone == "" ]]; then
+            echo "No milestone found on the issue"
             exit 2
           fi
           echo ::set-output name=milestone::$milestone
@@ -234,6 +238,54 @@ jobs:
           backport_commits=$(gh api "repos/$TARGET_ORG/$TARGET_REPO/pulls/$BACKPORT_PR_NUMBER/commits" --jq .[].sha | paste -s -d ' ' -)
           echo ::set-output name=backport_commits::$backport_commits
 
+      - uses: actions/checkout@v3
+        if: needs.backport-type.outputs.commented_on == 'pr'
+        with:
+          repository: ${{ github.event.client_payload.github.payload.repository.full_name }}
+
+      - name: Create pull request
+        if: needs.backport-type.outputs.commented_on == 'pr'
+        env:
+          GITHUB_TOKEN: ${{ secrets.ACTIONS_BOT_TOKEN }}
+          TARGET_MILESTONE: ${{ steps.milestone.outputs.milestone }}
+          BACKPORT_BRANCH: ${{ steps.branch.outputs.branch }}
+          ORIG_TITLE: ${{ github.event.client_payload.github.payload.issue.title }}
+          ORIG_ASSIGNEES: ${{ steps.assignees.outputs.assignees }}
+          ORIG_COMMENT_URL: ${{ github.event.client_payload.github.payload.comment.html_url }}
+          BACKPORT_COMMITS: ${{ steps.backport_commits.outputs.backport_commits }}
+          ORIG_ISSUE_URL: ${{ github.event.client_payload.github.payload.issue.html_url }}
+        run: |
+          if [[ "$IS_MERGED" != true ]]; then
+            echo "The pull request is not merged yet. Cancelling..."
+            exit 1
+          fi
+          # ensure unique branch
+          suffix=$(echo $(($RANDOM % 1000)))
+          git fetch
+          git remote -vv
+          git config --global user.email "solon_gousteris@outlook.com.gr"
+          git config --global user.name "siretsuog"
+          branch_name=$(echo "backport-$ORIG_TITLE-to-$BACKPORT_BRANCH-$suffix" | sed 's/ /-/g')
+          git checkout -b $branch_name remotes/origin/$BACKPORT_BRANCH
+          git cherry-pick -x $BACKPORT_COMMITS
+          git push --set-upstream origin $branch_name
+          gh pr create --title "[${BACKPORT_BRANCH}] ${ORIG_TITLE}" \
+            --base "${BACKPORT_BRANCH}" \
+            --repo "${TARGET_ORG}/${TARGET_REPO}" \
+            --assignee "${ORIG_ASSIGNEES}" \
+            --milestone "${TARGET_MILESTONE}" \
+            --body """pull request: ${ORIG_COMMENT_URL}
+            fixes $ORIG_ISSUE_URL
+            """
+
+      - name: Add reaction
+        uses: peter-evans/create-or-update-comment@v1
+        with:
+          token: ${{ secrets.ACTIONS_BOT_TOKEN }}
+          repository: ${{ github.event.client_payload.github.payload.repository.full_name }}
+          comment-id: ${{ github.event.client_payload.github.payload.comment.id }}
+          reaction-type: hooray
+
       - name: Debug
         run: |
           set -x
@@ -242,35 +294,3 @@ jobs:
           echo ${{ steps.milestone.outputs.milestone }}
           echo ${{ steps.backport_commits.outputs.backport_commits }}
           echo ${{ github.event.client_payload.github.eventName }}
-
-      # - name: Checkout repo
-      #   uses: actions/checkout@v3
-      #   with:
-      #     repository: siretsuog/${{ github.event.client_payload.github.payload.repository.name }}
-      #   run: |
-      #     set -x
-      #     git remote add upstream "https://github.com/$TARGET_ORG/$TARGET_REPO.git"
-      #     # git checkout -b backport-
-
-      # - name: Create issue
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.ACTIONS_BOT_TOKEN }}
-      #     TARGET_MILESTONE: ${{ steps.milestone.outputs.milestone }}
-      #     BACKPORT_BRANCH: ${{ steps.branch.outputs.branch }}
-      #     ORIG_TITLE: ${{ github.event.client_payload.github.payload.issue.title }}
-      #     ORIG_ASSIGNEES: ${{ steps.assignees.outputs.assignees }}
-      #     ORIG_ISSUE_URL: ${{ github.event.client_payload.github.payload.comment.html_url }}
-      #   run: |
-      #     gh issue create --title "[${BACKPORT_BRANCH}] ${ORIG_TITLE}" \
-      #       --repo "${TARGET_ORG}/${TARGET_REPO}" \
-      #       --assignee "${ORIG_ASSIGNEES}" \
-      #       --milestone "${TARGET_MILESTONE}" \
-      #       --body "issue: ${ORIG_ISSUE_URL}"
-
-      # - name: Add reaction
-      #   uses: peter-evans/create-or-update-comment@v1
-      #   with:
-      #     token: ${{ secrets.ACTIONS_BOT_TOKEN }}
-      #     repository: ${{ github.event.client_payload.github.payload.repository.full_name }}
-      #     comment-id: ${{ github.event.client_payload.github.payload.comment.id }}
-      #     reaction-type: hooray
