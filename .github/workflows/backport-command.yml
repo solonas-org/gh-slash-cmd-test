@@ -263,7 +263,7 @@ jobs:
           head_branch=$(echo "backport-$ORIG_TITLE-to-$BACKPORT_BRANCH-$suffix" | sed 's/ /-/g' | tr -d '[]')
           git checkout -b $head_branch remotes/upstream/$BACKPORT_BRANCH
           git cherry-pick -x $BACKPORT_COMMITS
-          git push --set-upstream origin $head_branch
+          git push origin $head_branch:$head_branch
           git remote rm upstream
           echo ::set-output name=head_branch::$head_branch
 
