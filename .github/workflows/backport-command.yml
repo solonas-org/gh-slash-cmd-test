@@ -253,6 +253,10 @@ jobs:
           set -x
           # ensure unique branch
           suffix=$(echo $(($RANDOM % 1000)))
+          # git config --global user.email "vbot@vectorized.io"
+          # git config --global user.name "vbotbuildovich"
+          git config --global user.email "solon_gousteris@outlook.com.gr"
+          git config --global user.name "siretsuog"
           upstream=$(git remote -vv | grep "upstream")
           if [[ "$upstream" == "" ]]; then
             # git remote add upstream https://github.com/redpanda-data/redpanda.git
@@ -260,10 +264,6 @@ jobs:
             added_upstream=true
           fi
           git fetch --all
-          # git config --global user.email "vbot@vectorized.io"
-          # git config --global user.name "vbotbuildovich"
-          git config --global user.email "solon_gousteris@outlook.com.gr"
-          git config --global user.name "siretsuog"
           head_branch=$(echo "backport-$ORIG_TITLE-to-$BACKPORT_BRANCH-$suffix" | sed 's/ /-/g' | tr -d '[]')
           git checkout -b $head_branch remotes/upstream/$BACKPORT_BRANCH
           git cherry-pick -x $BACKPORT_COMMITS
