@@ -257,20 +257,14 @@ jobs:
           # git config --global user.name "vbotbuildovich"
           git config --global user.email "solon_gousteris@outlook.com.gr"
           git config --global user.name "siretsuog"
-          upstream=$(git remote -vv | grep "upstream")
-          if [[ "$upstream" == "" ]]; then
-            # git remote add upstream https://github.com/redpanda-data/redpanda.git
-            git remote add upstream https://github.com/solonas-org/gh-slash-cmd-test.git
-            added_upstream=true
-          fi
+          # git remote add upstream https://github.com/redpanda-data/redpanda.git
+          git remote add upstream https://github.com/solonas-org/gh-slash-cmd-test.git
           git fetch --all
           head_branch=$(echo "backport-$ORIG_TITLE-to-$BACKPORT_BRANCH-$suffix" | sed 's/ /-/g' | tr -d '[]')
           git checkout -b $head_branch remotes/upstream/$BACKPORT_BRANCH
           git cherry-pick -x $BACKPORT_COMMITS
           git push --set-upstream origin $head_branch
-          if [[ "$added_upstream" == "true" ]]; then
-            git remote rm upstream
-          fi
+          git remote rm upstream
           echo ::set-output name=head_branch::$head_branch
 
 
