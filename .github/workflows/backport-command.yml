@@ -250,6 +250,7 @@ jobs:
           BACKPORT_COMMITS: ${{ steps.backport_commits.outputs.backport_commits }}
         id: head_branch
         run: |
+          set -x
           # ensure unique branch
           suffix=$(echo $(($RANDOM % 1000)))
           upstream=$(git remote -vv | grep "upstream")
