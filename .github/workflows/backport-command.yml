@@ -239,7 +239,39 @@ jobs:
 
       - uses: actions/checkout@v3
         with:
-          repository: ${{ github.event.client_payload.github.payload.repository.full_name }}
+          # repository: ${{ github.event.client_payload.github.payload.repository.full_name }}
+          repository: siretsuog/gh-slash-cmd-test
+
+      - name: Backport commits
+        env:
+          GITHUB_TOKEN: ${{ secrets.ACTIONS_BOT_TOKEN }}
+          BACKPORT_BRANCH: ${{ steps.branch.outputs.branch }}
+          ORIG_TITLE: ${{ github.event.client_payload.github.payload.issue.title }}
+          BACKPORT_COMMITS: ${{ steps.backport_commits.outputs.backport_commits }}
+        id: head_branch
+        run: |
+          # ensure unique branch
+          suffix=$(echo $(($RANDOM % 1000)))
+          upstream=$(git remote -vv | grep "upstream")
+          if [[ "$upstream" == "" ]]; then
+            # git remote add upstream https://github.com/redpanda-data/redpanda.git
+            git remote add upstream https://github.com/solonas-org/gh-slash-cmd-test.git
+            added_upstream=true
+          fi
+          git fetch --all
+          # git config --global user.email "vbot@vectorized.io"
+          # git config --global user.name "vbotbuildovich"
+          git config --global user.email "solon_gousteris@outlook.com.gr"
+          git config --global user.name "siretsuog"
+          head_branch=$(echo "backport-$ORIG_TITLE-to-$BACKPORT_BRANCH-$suffix" | sed 's/ /-/g' | tr -d '[]')
+          git checkout -b $head_branch remotes/upstream/$BACKPORT_BRANCH
+          git cherry-pick -x $BACKPORT_COMMITS
+          git push --set-upstream origin $head_branch
+          if [[ "$added_upstream" == "true" ]]; then
+            git remote rm upstream
+          fi
+          echo ::set-output name=head_branch::$head_branch
+
 
       - name: Create pull request
         env:
@@ -250,21 +282,12 @@ jobs:
           ORIG_ASSIGNEES: ${{ steps.assignees.outputs.assignees }}
           ORIG_COMMENT_URL: ${{ github.event.client_payload.github.payload.comment.html_url }}
           BACKPORT_COMMITS: ${{ steps.backport_commits.outputs.backport_commits }}
+          HEAD_BRANCH: ${{ steps.head_branch.outputs.head_branch }}
           ORIG_ISSUE_URL: ${{ github.event.client_payload.github.payload.issue.html_url }}
         run: |
-          # ensure unique branch
-          suffix=$(echo $(($RANDOM % 1000)))
-          git fetch
-          git remote -vv
-          # git config --global user.email "vbot@vectorized.io"
-          # git config --global user.name "vbotbuildovich"
-          git config --global user.email "solon_gousteris@outlook.com.gr"
-          git config --global user.name "siretsuog"
-          branch_name=$(echo "backport-$ORIG_TITLE-to-$BACKPORT_BRANCH-$suffix" | sed 's/ /-/g' | tr -d '[]')
-          git checkout -b $branch_name remotes/origin/$BACKPORT_BRANCH
-          git cherry-pick -x $BACKPORT_COMMITS
-          git push --set-upstream origin $branch_name
+          # --head "vbotbuildovich:${HEAD_BRANCH}"
           gh pr create --title "${ORIG_TITLE}" \
+            --head "siretsuog:${HEAD_BRANCH}" \
             --base "${BACKPORT_BRANCH}" \
             --draft \
             --repo "${TARGET_ORG}/${TARGET_REPO}" \
