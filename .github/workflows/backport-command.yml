@@ -312,7 +312,7 @@ jobs:
             --repo "${TARGET_ORG}/${TARGET_REPO}" \
             --reviewer "${ORIG_ASSIGNEES}" \
             --milestone "${TARGET_MILESTONE}" \
-            --body """Backport from pull request: ${ORIG_ISSUE_URL}
+            --body """Backport from issue: ${ORIG_ISSUE_URL}
             Fixes $ORIG_ISSUE_URL
             """
 
