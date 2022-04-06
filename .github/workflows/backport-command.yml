@@ -110,20 +110,13 @@ jobs:
           BACKPORT_BRANCH: ${{ steps.branch.outputs.branch }}
           ORIG_TITLE: ${{ github.event.client_payload.github.payload.issue.title }}
           ORIG_ASSIGNEES: ${{ steps.assignees.outputs.assignees }}
-          ORIG_COMMENT_URL: ${{ github.event.client_payload.github.payload.comment.html_url }}
+          ORIG_ISSUE_URL: ${{ github.event.client_payload.github.payload.issue.html_url }}
         run: |
           gh issue create --title "[${BACKPORT_BRANCH}] ${ORIG_TITLE}" \
             --repo "${TARGET_ORG}/${TARGET_REPO}" \
             --assignee "${ORIG_ASSIGNEES}" \
             --milestone "${TARGET_MILESTONE}" \
-            --body "Backport ${ORIG_COMMENT_URL} to branch ${BACKPORT_BRANCH}"
-
-      - name: Debug
-        env:
-          GH_PAYLOAD: ${{ toJson(github) }}
-        run: |
-          set -x
-          echo $GH_PAYLOAD
+            --body "Backport ${ORIG_ISSUE_URL} to branch ${BACKPORT_BRANCH}"
 
       - name: Get reviewers of PR
         if: needs.backport-type.outputs.commented_on == 'pr'
@@ -187,7 +180,7 @@ jobs:
           BACKPORT_BRANCH: ${{ steps.branch.outputs.branch }}
           ORIG_TITLE: ${{ github.event.client_payload.github.payload.issue.title }}
           ORIG_REVIEWERS: ${{ steps.reviewers.outputs.reviewers }}
-          ORIG_COMMENT_URL: ${{ github.event.client_payload.github.payload.comment.html_url }}
+          ORIG_ISSUE_URL: ${{ github.event.client_payload.github.payload.issue.html_url }}
           HEAD_BRANCH: ${{ steps.head_branch.outputs.head_branch }}
         run: |
           issue_number=$(gh issue list --repo "${TARGET_ORG}/${TARGET_REPO}" \
@@ -206,7 +199,7 @@ jobs:
             --repo "${TARGET_ORG}/${TARGET_REPO}" \
             --reviewer "${ORIG_REVIEWERS}" \
             --milestone "${TARGET_MILESTONE}" \
-            --body """Backport from pull request: ${ORIG_COMMENT_URL}
+            --body """Backport from pull request: ${ORIG_ISSUE_URL}
             Fixes $issue_number
             """
 
@@ -308,7 +301,6 @@ jobs:
           BACKPORT_BRANCH: ${{ steps.branch.outputs.branch }}
           ORIG_TITLE: ${{ github.event.client_payload.github.payload.issue.title }}
           ORIG_ASSIGNEES: ${{ steps.assignees.outputs.assignees }}
-          ORIG_COMMENT_URL: ${{ github.event.client_payload.github.payload.comment.html_url }}
           HEAD_BRANCH: ${{ steps.head_branch.outputs.head_branch }}
           ORIG_ISSUE_URL: ${{ github.event.client_payload.github.payload.issue.html_url }}
         run: |
@@ -320,7 +312,7 @@ jobs:
             --repo "${TARGET_ORG}/${TARGET_REPO}" \
             --reviewer "${ORIG_ASSIGNEES}" \
             --milestone "${TARGET_MILESTONE}" \
-            --body """Backport from pull request: ${ORIG_COMMENT_URL}
+            --body """Backport from pull request: ${ORIG_ISSUE_URL}
             Fixes $ORIG_ISSUE_URL
             """
 
