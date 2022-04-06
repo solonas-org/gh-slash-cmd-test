@@ -241,6 +241,7 @@ jobs:
         with:
           # repository: ${{ github.event.client_payload.github.payload.repository.full_name }}
           repository: siretsuog/gh-slash-cmd-test
+          token: ${{ secrets.ACTIONS_BOT_TOKEN }}
 
       - name: Backport commits
         env:
