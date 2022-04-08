@@ -120,6 +120,7 @@ jobs:
           ORIG_ISSUE_URL: ${{ github.event.client_payload.github.payload.issue.html_url }}
         run: |
           gh issue create --title "[${BACKPORT_BRANCH}] ${ORIG_TITLE}" \
+            --label "kind/backport" \
             --repo "${TARGET_ORG}/${TARGET_REPO}" \
             --assignee "${ORIG_ASSIGNEES}" \
             --milestone "${TARGET_MILESTONE}" \
@@ -206,6 +207,7 @@ jobs:
           fi
           gh pr create --title "[${BACKPORT_BRANCH}] ${ORIG_TITLE}" \
             --base "${BACKPORT_BRANCH}" \
+            --label "kind/backport" \
             --head "siretsuog:${HEAD_BRANCH}" \
             --draft \
             --repo "${TARGET_ORG}/${TARGET_REPO}" \
@@ -318,6 +320,7 @@ jobs:
         run: |
           # --head "vbotbuildovich:${HEAD_BRANCH}"
           gh pr create --title "${ORIG_TITLE}" \
+            --label "kind/backport" \
             --head "siretsuog:${HEAD_BRANCH}" \
             --base "${BACKPORT_BRANCH}" \
             --draft \
