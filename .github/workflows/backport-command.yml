@@ -162,7 +162,9 @@ jobs:
           if [[ "$IS_MERGED" != true ]]; then
             msg="The pull request is not merged yet. Cancelling..."
             echo "$msg"
-            gh pr comment "$PR_NUMBER" --body "$msg"
+            gh pr comment "$PR_NUMBER" \
+              --body "$msg" \
+              --repo "$TARGET_ORG/$TARGET_REPO"
             exit 1
           fi
           # ensure unique branch
