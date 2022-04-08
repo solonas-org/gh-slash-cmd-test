@@ -151,6 +151,7 @@ jobs:
       - name: Backport commits
         if: needs.backport-type.outputs.commented_on == 'pr'
         env:
+          PR_NUMBER: ${{ github.event.client_payload.pull_request.number }}
           GITHUB_TOKEN: ${{ secrets.ACTIONS_BOT_TOKEN }}
           BACKPORT_BRANCH: ${{ steps.branch.outputs.branch }}
           ORIG_TITLE: ${{ github.event.client_payload.github.payload.issue.title }}
@@ -159,7 +160,9 @@ jobs:
         id: head_branch
         run: |
           if [[ "$IS_MERGED" != true ]]; then
-            echo "The pull request is not merged yet. Cancelling..."
+            msg="The pull request is not merged yet. Cancelling..."
+            echo "$msg"
+            gh pr comment "$PR_NUMBER" --body "$msg"
             exit 1
           fi
           # ensure unique branch
