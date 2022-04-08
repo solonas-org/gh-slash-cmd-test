@@ -14,6 +14,13 @@ jobs:
       TARGET_ORG: ${{ github.event.client_payload.slash_command.args.named.org }}
       TARGET_REPO: ${{ github.event.client_payload.slash_command.args.named.repo }}
     steps:
+      - name: Debug
+        env:
+          GH_CONTEXT: ${{ toJson(github) }}
+        run: |
+          set -x
+          echo $GH_CONTEXT
+
       - name: Get type of backport (issue or PR)
         env:
           GITHUB_TOKEN: ${{ secrets.ACTIONS_BOT_TOKEN }}
