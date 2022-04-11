@@ -103,12 +103,22 @@ jobs:
           if [[ "$label_exists" == "" ]]; then
             gh label create "kind/backport" --repo "$TARGET_ORG/$TARGET_REPO"
           fi
-          gh issue create --title "[${BACKPORT_BRANCH}] ${ORIG_TITLE}" \
-            --label "kind/backport" \
-            --repo "${TARGET_ORG}/${TARGET_REPO}" \
-            --assignee "${ORIG_ASSIGNEES}" \
-            --milestone "${TARGET_MILESTONE}" \
-            --body "Backport ${ORIG_ISSUE_URL} to branch ${BACKPORT_BRANCH}"
+          backport_issue_url=$(gh issue list --repo "${TARGET_ORG}/${TARGET_REPO}" \
+              --state open \
+              --search "[${BACKPORT_BRANCH}] ${ORIG_TITLE} in:title" \
+              --json url \
+              --milestone "${TARGET_MILESTONE}" \
+              --jq '.[0].url')
+          if [[ "$backport_issue_url" == "" ]]; then
+            gh issue create --title "[${BACKPORT_BRANCH}] ${ORIG_TITLE}" \
+              --label "kind/backport" \
+              --repo "${TARGET_ORG}/${TARGET_REPO}" \
+              --assignee "${ORIG_ASSIGNEES}" \
+              --milestone "${TARGET_MILESTONE}" \
+              --body "Backport ${ORIG_ISSUE_URL} to branch ${BACKPORT_BRANCH}"
+          else
+            gh issue comment "$ORIG_ISSUE_URL" --body "Backport issue already exists: $backport_issue_url"
+          fi
 
       - name: Get reviewers of PR
         if: needs.backport-type.outputs.commented_on == 'pr'
@@ -200,11 +210,11 @@ jobs:
               --json title --jq .title)
 
             backport_issue_url=$(gh issue list --repo "${TARGET_ORG}/${TARGET_REPO}" \
-            --state open \
-            --search "[${BACKPORT_BRANCH}] ${orig_issue_title} in:title" \
-            --json url \
-            --milestone "${TARGET_MILESTONE}" \
-            --jq '.[0].url')
+              --state open \
+              --search "[${BACKPORT_BRANCH}] ${orig_issue_title} in:title" \
+              --json url \
+              --milestone "${TARGET_MILESTONE}" \
+              --jq '.[0].url')
 
             if [[ "$backport_issue_url" == "" ]]; then
               # backport issue does not exist and will be created
