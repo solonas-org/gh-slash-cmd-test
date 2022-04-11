@@ -188,6 +188,7 @@ jobs:
           FIXING_ISSUE_URL: ${{ steps.pr_details.outputs.fixing_issue_url }}
           ORIG_PR_NUMBER: ${{ github.event.client_payload.pull_request.number }}
         run: |
+          set -x
           label_exists=$(gh label list --repo "$TARGET_ORG/$TARGET_REPO" --limit 500 | grep "kind/backport")
           if [[ "$label_exists" == "" ]]; then
             gh label create "kind/backport" --repo "$TARGET_ORG/$TARGET_REPO"
