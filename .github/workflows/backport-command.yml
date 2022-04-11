@@ -195,7 +195,9 @@ jobs:
           fi
           if [[ "$FIXING_ISSUE_URL" != "" ]]; then
             orig_issue_number=$(echo "$FIXING_ISSUE_URL" | awk -F/ '{print $NF}')
-            orig_issue_title=$(gh issue view "$orig_issue_number" --json title --jq .title)
+            orig_issue_title=$(gh issue view "$orig_issue_number" \
+              --repo "${TARGET_ORG}/${TARGET_REPO}" \
+              --json title --jq .title)
 
             backport_issue_url=$(gh issue list --repo "${TARGET_ORG}/${TARGET_REPO}" \
             --state open \
@@ -207,7 +209,9 @@ jobs:
             if [[ "$backport_issue_url" == "" ]]; then
               # backport issue does not exist and will be created
               # get orig issue assignees
-              orig_issue_assingees=$(gh issue view "$orig_issue_number" --json assignees --jq .assignees.[].login | paste -s -d ',' -)
+              orig_issue_assingees=$(gh issue view "$orig_issue_number" \
+                --repo "${TARGET_ORG}/${TARGET_REPO}" \
+                --json assignees --jq .assignees.[].login | paste -s -d ',' -)
               # create issue
               backport_issue_url=$(gh issue create --title "[${BACKPORT_BRANCH}] ${orig_issue_title}" \
                 --label "kind/backport" \
