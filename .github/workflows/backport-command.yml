@@ -184,7 +184,7 @@ jobs:
           set +e
           git cherry-pick -x $BACKPORT_COMMITS
           if [[ "$?" != "0" ]]; then
-            msg="""[CONFLICT](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+            msg="""CONFLICT see [workflow](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
             run manually:
             \`\`\`
             git cherry-pick -x $BACKPORT_COMMITS
