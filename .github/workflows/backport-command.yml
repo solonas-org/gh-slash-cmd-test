@@ -143,7 +143,7 @@ jobs:
           repository: siretsuog/gh-slash-cmd-test
           token: ${{ secrets.ACTIONS_BOT_TOKEN }}
 
-      - name: Backport commits
+      - name: Backport commits and get details
         if: needs.backport-type.outputs.commented_on == 'pr'
         env:
           PR_NUMBER: ${{ github.event.client_payload.pull_request.number }}
@@ -162,11 +162,17 @@ jobs:
               --repo "$TARGET_ORG/$TARGET_REPO"
             exit 1
           fi
-          fixing_issue_url=$(gh pr view "$PR_NUMBER" --repo "$TARGET_ORG/$TARGET_REPO" --json body --jq .body \
-            | grep 'close\|fix\|resolve' \
-            | grep ' https://github.com/\|:https://github.com/\|: https://github.com' \
-            | grep -Eo '(http.*)' | head -1 \
-            || "")
+          fixing_issue_urls=$(gh api graphql -f query='{
+              resource(url: "https://github.com/${TARGET_ORG}/${TARGET_REPO}/pull/${PR_NUMBER}") {
+                ... on PullRequest {
+                  closingIssuesReferences(first: 20) {
+                    nodes {
+                      url
+                    }
+                  }
+                }
+              }
+            }' --jq .data.resource.closingIssuesReferences.nodes.[].url)
           # ensure unique branch
           suffix=$(echo $(($RANDOM % 1000)))
           # git config --global user.email "vbot@vectorized.io"
@@ -183,7 +189,7 @@ jobs:
           git push --set-upstream origin $head_branch
           git remote rm upstream
           echo ::set-output name=head_branch::$head_branch
-          echo ::set-output name=fixing_issue_url::$fixing_issue_url
+          echo ::set-output name=fixing_issue_urls::$fixing_issue_urls
 
       - name: Create pull request
         if: needs.backport-type.outputs.commented_on == 'pr'
@@ -195,45 +201,49 @@ jobs:
           ORIG_REVIEWERS: ${{ steps.reviewers.outputs.reviewers }}
           ORIG_ISSUE_URL: ${{ github.event.client_payload.github.payload.issue.html_url }}
           HEAD_BRANCH: ${{ steps.pr_details.outputs.head_branch }}
-          FIXING_ISSUE_URL: ${{ steps.pr_details.outputs.fixing_issue_url }}
+          FIXING_ISSUE_URLs: ${{ steps.pr_details.outputs.fixing_issue_urls }}
           ORIG_PR_NUMBER: ${{ github.event.client_payload.pull_request.number }}
+          ORIG_PR_URL: ${{ github.event.client_payload.pull_request.html_url }}
         run: |
           set -x
           label_exists=$(gh label list --repo "$TARGET_ORG/$TARGET_REPO" --limit 500 | grep "kind/backport")
           if [[ "$label_exists" == "" ]]; then
             gh label create "kind/backport" --repo "$TARGET_ORG/$TARGET_REPO"
           fi
-          if [[ "$FIXING_ISSUE_URL" != "" ]]; then
-            orig_issue_number=$(echo "$FIXING_ISSUE_URL" | awk -F/ '{print $NF}')
-            orig_issue_title=$(gh issue view "$orig_issue_number" \
-              --repo "${TARGET_ORG}/${TARGET_REPO}" \
-              --json title --jq .title)
+          backport_issue_urls=()
+          if [[ "$FIXING_ISSUE_URLs" != "" ]]; then
+            for FIXING_ISSUE_URL in $FIXING_ISSUE_URLs; do
+              orig_issue_number=$(echo "$FIXING_ISSUE_URL" | awk -F/ '{print $NF}')
+              orig_org=$(echo "$FIXING_ISSUE_URL" | awk -F/ '{print $4}')
+              orig_repo=$(echo "$FIXING_ISSUE_URL" | awk -F/ '{print $5}')
 
-            backport_issue_url=$(gh issue list --repo "${TARGET_ORG}/${TARGET_REPO}" \
-              --state open \
-              --search "[${BACKPORT_BRANCH}] ${orig_issue_title} in:title" \
-              --json url \
-              --milestone "${TARGET_MILESTONE}" \
-              --jq '.[0].url')
+              orig_issue_title=$(gh issue view "$orig_issue_number" \
+                --repo "${orig_org}/${orig_repo}" \
+                --json title --jq .title)
 
-            if [[ "$backport_issue_url" == "" ]]; then
-              # backport issue does not exist and will be created
-              # get orig issue assignees
-              orig_issue_assingees=$(gh issue view "$orig_issue_number" \
-                --repo "${TARGET_ORG}/${TARGET_REPO}" \
-                --json assignees --jq .assignees.[].login | paste -s -d ',' -)
-              # create issue
-              backport_issue_url=$(gh issue create --title "[${BACKPORT_BRANCH}] ${orig_issue_title}" \
-                --label "kind/backport" \
-                --repo "${TARGET_ORG}/${TARGET_REPO}" \
-                --assignee "${orig_issue_assingees}" \
+              backport_issue_url=$(gh issue list --repo "${orig_org}/${orig_repo}" \
+                --state open \
+                --search "[${BACKPORT_BRANCH}] ${orig_issue_title} in:title" \
+                --json url \
                 --milestone "${TARGET_MILESTONE}" \
-                --body "Backport ${FIXING_ISSUE_URL} to branch ${BACKPORT_BRANCH}")
-              # post a comment on original PR
-              gh pr comment "$ORIG_PR_NUMBER" \
-                --body "Created backport issue $backport_issue_url" \
-                --repo "$TARGET_ORG/$TARGET_REPO"
-            fi
+                --jq '.[0].url')
+
+              if [[ "$backport_issue_url" == "" ]]; then
+                # backport issue does not exist and will be created
+                # get orig issue assignees
+                orig_issue_assingees=$(gh issue view "$orig_issue_number" \
+                  --repo "${orig_org}/${orig_repo}" \
+                  --json assignees --jq .assignees.[].login | paste -s -d ',' -)
+                # create issue
+                backport_issue_url=$(gh issue create --title "[${BACKPORT_BRANCH}] ${orig_issue_title}" \
+                  --label "kind/backport" \
+                  --repo "${orig_org}/${orig_repo}" \
+                  --assignee "${orig_issue_assingees}" \
+                  --milestone "${TARGET_MILESTONE}" \
+                  --body "Backport ${FIXING_ISSUE_URL} to branch ${BACKPORT_BRANCH}. Requested by PR $ORIG_PR_URL")
+              fi
+              backport_issue_urls+=$(echo "Fixes $backport_issue_url, ")
+            done
           fi
           
           gh pr create --title "[${BACKPORT_BRANCH}] ${ORIG_TITLE}" \
@@ -245,7 +255,7 @@ jobs:
             --reviewer "${ORIG_REVIEWERS}" \
             --milestone "${TARGET_MILESTONE}" \
             --body """Backport from pull request: ${ORIG_ISSUE_URL}
-            Fixes $backport_issue_url
+            $backport_issue_urls
             """
 
       - name: Add reaction
