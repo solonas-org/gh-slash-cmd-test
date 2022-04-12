@@ -213,13 +213,13 @@ jobs:
           backport_issue_urls=()
           if [[ "$FIXING_ISSUE_URLs" != "" ]]; then
             for FIXING_ISSUE_URL in $FIXING_ISSUE_URLs; do
+              orig_issue_number=$(echo "$FIXING_ISSUE_URL" | awk -F/ '{print $NF}')
+              orig_org=$(echo "$FIXING_ISSUE_URL" | awk -F/ '{print $4}')
+              orig_repo=$(echo "$FIXING_ISSUE_URL" | awk -F/ '{print $5}')
               label_exists=$(gh label list --repo "${orig_org}/${orig_repo}" --limit 500 | grep "kind/backport")
               if [[ "$label_exists" == "" ]]; then
                 gh label create "kind/backport" --repo "${orig_org}/${orig_repo}"
               fi
-              orig_issue_number=$(echo "$FIXING_ISSUE_URL" | awk -F/ '{print $NF}')
-              orig_org=$(echo "$FIXING_ISSUE_URL" | awk -F/ '{print $4}')
-              orig_repo=$(echo "$FIXING_ISSUE_URL" | awk -F/ '{print $5}')
 
               orig_issue_title=$(gh issue view "$orig_issue_number" \
                 --repo "${orig_org}/${orig_repo}" \
