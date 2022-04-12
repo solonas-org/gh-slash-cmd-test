@@ -181,7 +181,21 @@ jobs:
           git remote set-url origin "https://siretsuog:$GITHUB_TOKEN@github.com/siretsuog/$TARGET_REPO.git"
           head_branch=$(echo "backport-$ORIG_TITLE-to-$BACKPORT_BRANCH-$suffix" | sed 's/ /-/g' | tr -d '[]')
           git checkout -b $head_branch remotes/upstream/$BACKPORT_BRANCH
+          set +e
           git cherry-pick -x $BACKPORT_COMMITS
+          if [[ "$?" != "0" ]]; then
+            msg="""[CONFLICT](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+            run manually:
+            ```
+            git cherry-pick -x $BACKPORT_COMMITS
+            ```
+            """
+            gh pr comment "$PR_NUMBER" \
+              --body "$msg" \
+              --repo "$TARGET_ORG/$TARGET_REPO"
+            exit 1
+          fi
+          set -e
           git push --set-upstream origin $head_branch
           git remote rm upstream
           # assumption already forked repo on bot account
