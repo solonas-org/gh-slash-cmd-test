@@ -151,7 +151,7 @@ jobs:
         id: pr_details
         run: |
           if [[ "$IS_MERGED" != true ]]; then
-            msg="The pull request is not merged yet. Cancelling..."
+            msg="The pull request is not merged yet. Cancelling backport..."
             echo "$msg"
             gh pr comment "$PR_NUMBER" \
               --body "$msg" \
