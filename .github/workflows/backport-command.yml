@@ -163,7 +163,7 @@ jobs:
             exit 1
           fi
           fixing_issue_urls=$(gh api graphql -f query='{
-              resource(url: "https://github.com/${TARGET_ORG}/${TARGET_REPO}/pull/${PR_NUMBER}") {
+              resource(url: "https://github.com/'${TARGET_ORG}'/'${TARGET_REPO}'/pull/'${PR_NUMBER}'") {
                 ... on PullRequest {
                   closingIssuesReferences(first: 20) {
                     nodes {
