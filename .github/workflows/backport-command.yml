@@ -77,6 +77,7 @@ jobs:
           if [[ "${TARGET_MILESTONE}" == "auto" ]]; then
             major=$(echo "${BACKPORT_BRANCH}" | grep -Eo '^(v[0-9][0-9].[0-9]+)')
             set +e
+            set -o pipefail
             latest_released=$(gh api "repos/redpanda-data/redpanda/releases" --jq '.[] | select(.draft==false).name'  | grep "${major}" | head -1)
             exit_code="$?"
             set -e
