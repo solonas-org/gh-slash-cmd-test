@@ -73,16 +73,21 @@ jobs:
           TARGET_MILESTONE: ${{ github.event.client_payload.slash_command.args.named.milestone }}
         id: milestone
         run: |
+          set -x
           if [[ "${TARGET_MILESTONE}" == "auto" ]]; then
             major=$(echo "${BACKPORT_BRANCH}" | grep -Eo '^(v[0-9][0-9].[0-9][0-9])')
             set +e
             latest_released=$(gh api "repos/redpanda-data/redpanda/releases" --jq '.[] | select(.draft==false).name'  | grep "${major}" | head -1)
+            exit_code="$?"
             set -e
             # latest_released=$(gh api "repos/${TARGET_ORG}/${TARGET_REPO}/releases" --jq '.[] | select(.draft==false).name'  | grep "${major}" | head -1)
-            if [[ "$latest_released" == "" ]]; then
+            if [[ "$exit_code" == "1" && "$latest_released" == "" ]]; then
               assigne_milestone="$major.1"
-            else
+            elif [[ "$exit_code" == "0" ]]; then
               assigne_milestone=$(echo ${latest_released} | awk -F. -v OFS=. '{$NF += 1 ; print}')
+            else
+              echo "Unexpected error"
+              exit $exit_code
             fi
           else
             assigne_milestone="${TARGET_MILESTONE}"
