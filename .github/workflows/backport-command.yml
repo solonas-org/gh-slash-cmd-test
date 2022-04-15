@@ -73,6 +73,7 @@ jobs:
           TARGET_MILESTONE: ${{ github.event.client_payload.slash_command.args.named.milestone }}
         id: milestone
         run: |
+          set -x
           if [[ "${TARGET_MILESTONE}" == "auto" ]]; then
             major=$(echo "${BACKPORT_BRANCH}" | grep -Eo '^(v[0-9][0-9].[0-9][0-9])')
             set +e
