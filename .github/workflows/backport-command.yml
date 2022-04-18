@@ -199,14 +199,14 @@ jobs:
           git remote add upstream "https://github.com/$TARGET_ORG/$TARGET_REPO.git"
           git fetch --all
           git remote set-url origin "https://${{ steps.user.outputs.username }}:$GITHUB_TOKEN@github.com/${{ steps.user.outputs.username }}/$TARGET_REPO.git"
-          backport_issues=""
+          backport_issues_numbers=""
           for issue_url in $fixing_issue_urls; do
-            backport_issues+=$(echo $issue_url | awk -F/ '{print $NF"-"}')
+            backport_issues_numbers+=$(echo $issue_url | awk -F/ '{print $NF"-"}')
           done
-          if [[ "$backport_issues" == "" ]]; then
-            backport_issues="fixes-to-"
+          if [[ "$backport_issues_numbers" == "" ]]; then
+            backport_issues_numbers="fixes-to-"
           fi
-          head_branch=$(echo "backport-$backport_issues$BACKPORT_BRANCH-$suffix" | sed 's/ /-/g')
+          head_branch=$(echo "backport-$backport_issues_numbers$BACKPORT_BRANCH-$suffix" | sed 's/ /-/g')
           git checkout -b $head_branch remotes/upstream/$BACKPORT_BRANCH
           set +e
           git cherry-pick -x $BACKPORT_COMMITS
