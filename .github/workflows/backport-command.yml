@@ -187,7 +187,7 @@ jobs:
               --body "$msg" \
               --repo "$TARGET_ORG/$TARGET_REPO"
             exit 1
-          elif [[ "PR_BASE_BRANCH" != "$REPO_DEFAULT_BRANCH" ]]; then
+          elif [[ "$PR_BASE_BRANCH" != "$REPO_DEFAULT_BRANCH" ]]; then
             msg="The pull request's base branch is not the default one. Cancelling backport..."
             echo "$msg"
             gh pr comment "$PR_NUMBER" \
